@@ -50,7 +50,7 @@ This function...
 ## Download & install
 
 
-Download the zipped file at [exseivier's github](https://www.github.com/exseivier/not-alike)
+Download the zipped file at [exseivier's github](https://www.github.com/exseivier/not-alike-0.1.1)
 
 ```bash
 unzip not-alike-main.zip
