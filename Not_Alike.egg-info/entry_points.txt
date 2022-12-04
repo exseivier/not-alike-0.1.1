@@ -1,0 +1,3 @@
+[console_scripts]
+not-alike = not_alike.nal:main
+
