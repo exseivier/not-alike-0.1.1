@@ -35,17 +35,17 @@ This pipeline requires two input files, one is the fasta file of the genome of i
 
 ## Commands
 
-# database-makeblastdb
+### database-makeblastdb
 
 This function...
 
-# database-makefiledb
+### database-makefiledb
 
-# search
+### search
 
-# show-database
+### show-database
 
-# show-exp
+### show-exp
 
 ## Download & install
 
