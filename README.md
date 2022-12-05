@@ -37,20 +37,28 @@ This pipeline requires two input files, one is the fasta file of the genome of i
 
 ### database-makeblastdb
 
-This function...
+Creates a database of BLAST\_DB version 5 files from a NCBI genomes dataset downloaded with dataset tool. It reads the dataset\_catalog.json to get the path to FASTA files.
 
 ### database-makefiledb
 
+Creates a text file with the path names where BLAST\_DB file are separated by return characters and it have the function to exclude the taxon you select.
+
 ### search
+
+Performs the identification of dissimilar regions comparing the target genome to several genomes database
 
 ### show-database
 
+Transforms the assembly\_data\_report.jsonl file to TSV format file with dataformat NCBI tool and prints on screen the accession number, organism name and ID of organism taxon.
+
 ### show-exp
+
+It reads the 'experiments.log' log file and prints on screen the information contained in it which are information about parameters values, process ID and the date of experiments done inside the folder
 
 ## Download & install
 
 
-Download the zipped file at [exseivier's github](https://www.github.com/exseivier/not-alike-0.1.1)
+#### Download the zipped file at [exseivier's github](https://www.github.com/exseivier/not-alike-0.1.1)
 
 ```bash
 unzip not-alike-main.zip
