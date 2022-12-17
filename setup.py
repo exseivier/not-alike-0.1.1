@@ -23,7 +23,7 @@ setup(
                 ]
             },
     classifiers = [
-        'Development Status :: 1 - Alpha',
+        'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: Science/Research',
