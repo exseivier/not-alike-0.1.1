@@ -32,15 +32,15 @@ def main():
 @click.option('-e', '--evalue', \
                 help = 'E-value cutoff', \
                 required = True, \
-                type = str)
+                type = float)
 @click.option('-i', '--identity', \
                 help = 'Identity percentage cutoff', \
                 required = True, \
-                type = str)
+                type = float)
 @click.option('-q', '--qcov', \
                 help = 'HSP query coverage cutoff', \
                 required = True, \
-                type = str)
+                type = float)
 @click.option('-t', '--task', \
                 help = 'BLAST task [blastn | megablast | dc-megablast]', \
                 required = True, \
@@ -50,7 +50,11 @@ def main():
                 required = False, \
                 default = 'Empty', \
                 type = str)
-def search(genome, window_size, step_size, database_file, evalue, identity, qcov, task, comment):
+@click.option('--quite-opposite', \
+                is_flag = True, \
+                help = 'Performs the opposite task of not-alike.', \
+                type = bool)
+def search(genome, window_size, step_size, database_file, evalue, identity, qcov, task, comment, quite_opposite):
     """
         Searches for not alike fragments in query genome
     """
@@ -87,7 +91,7 @@ def search(genome, window_size, step_size, database_file, evalue, identity, qcov
         print('Blasting ' + dbf + ' ...')
         CMD.do_blast(input_split, 'blast_db/' + dbf, 'blast_out/out.blast', evalue, identity, qcov, task)
         print('Updating input_split')
-        CMD.select_sequences(input_split, 'blast_out/out.blast')
+        CMD.select_sequences(input_split, 'blast_out/out.blast', quite_opposite)
 
     print('BLASTn searching done!')
     print('Mapping on process.')
@@ -107,7 +111,7 @@ def search(genome, window_size, step_size, database_file, evalue, identity, qcov
                 help = 'Path to FASTA files database', \
                 required = True, \
                 type = str)
-def database_makeblastdb(db_path):
+def db_makeblast(db_path):
     """
         Builds a BLAST_DB (version 5) database files
     """
@@ -119,11 +123,20 @@ def database_makeblastdb(db_path):
                 help = 'Path to FASTA files database', \
                 required = True, \
                 type = str)
-def database_makefiledb(db_path):
+@click.option('-e', '--exclude', \
+                help = 'A list with the accession numbers of the organisms you want to exclude from database text file.', \
+                required = True, \
+                type = str)
+@click.option('-o', '--out', \
+                help = 'Output file name', \
+                required = True, \
+                type = str)
+def db_makefile(db_path, exclude, out):
     """
         Creates the database text file which contains the BLAST_DB files paths.
     """
-    CMD.make_txtfiledb(db_path)
+    exclude = exclude.split(',')
+    CMD.make_txtfiledb(db_path, exclude, out)
 
 
 @main.command()
@@ -131,7 +144,7 @@ def database_makefiledb(db_path):
                 help = 'Genomes database path', \
                 required = True, \
                 type = str)
-def show_database(db_path):
+def show_db(db_path):
     """
         Shows metadata of database [accession number, organism name and organism taxon id]
     """
@@ -146,11 +159,16 @@ def show_database(db_path):
     CMD.print_table(assembly_report_tsv)
         
 @main.command()
-def show_exp():
+@click.option('--sort-by', \
+                help = 'Criteria to sort values.', \
+                required = False, \
+                default = 'DATE', \
+                type = str)
+def show_exp(sort_by):
     """
         Shows information about epxeriments stored in the current working directory
     """
-    CMD.show_exp_info()
+    CMD.show_exp_info(sort_by)
 
 
 if __name__ == '__main__':

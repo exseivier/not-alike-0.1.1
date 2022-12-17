@@ -130,7 +130,7 @@ def __load_headers(hd_file):
     return heads
 
 
-def __select_seqs(seqs, heads):
+def __select_seqs(seqs, heads, quite_opposite):
     """
         Selects those sequences which header is not in heads list.
     """
@@ -139,7 +139,10 @@ def __select_seqs(seqs, heads):
     print(str(lsq) + ' current sequences')
     heads = list(set(heads))
     lhd = len(heads)
-    print(str(lhd) + ' dropped secuences')
+    if quite_opposite:
+        print(str(lhd) + ' similar sequences')
+    else:
+        print(str(lhd) + ' dropped secuences')
     if lhd <= 0:
         return seqs
     list_seqs_keys = [x[1:] for x in list(seqs.keys())]
@@ -155,11 +158,19 @@ def __select_seqs(seqs, heads):
 
     while pivot < len(heads_seqs_keys)-1:
         if heads_seqs_keys[pivot] == heads_seqs_keys[nextp]:
-            heads_seqs_keys.pop(pivot)
-            heads_seqs_keys.pop(pivot)
+            if quite_opposite:
+                heads_seqs_keys.pop(pivot)
+                pivot += 1
+                nextp = pivot + 1
+            else:
+                heads_seqs_keys.pop(pivot)
+                heads_seqs_keys.pop(pivot)
         else:
-            pivot += 1
-            nextp = pivot + 1
+            if quite_opposite:
+                heads_seqs_keys.pop(pivot)
+            else:
+                pivot += 1
+                nextp = pivot + 1
     
 
     out_seqs = {}
@@ -358,9 +369,9 @@ def do_blast(query, db_file, out_blast, evalue, idt, qcov, task):
                     '-out', out_blast, \
                     '-outfmt', '6 qseqid', \
                     '-task', task, \
-                    '-perc_identity', idt, \
-                    '-qcov_hsp_perc', qcov, \
-                    '-evalue', evalue, \
+                    '-perc_identity', str(idt), \
+                    '-qcov_hsp_perc', str(qcov), \
+                    '-evalue', str(evalue), \
                     '-max_target_seqs', str(1)], \
                     stdout = sup.PIPE, \
                     stderr = sup.PIPE)
@@ -368,7 +379,7 @@ def do_blast(query, db_file, out_blast, evalue, idt, qcov, task):
     p.communicate()
     p.kill()
 
-def select_sequences(in_file, hd_file):
+def select_sequences(in_file, hd_file, quite_opposite):
     """
         Selects those sequences that hit a subject in blast searching
     """
@@ -377,7 +388,7 @@ def select_sequences(in_file, hd_file):
     
     heads = __load_headers(hd_file)
 
-    seqs = __select_seqs(seqs, heads)
+    seqs = __select_seqs(seqs, heads, quite_opposite)
 
     __write_seqs(seqs, in_file)
 
@@ -459,6 +470,41 @@ def make_db(db_path):
                 print(stderr)
                 p.kill()
 
+def make_txtfiledb(db_path, exclude, out):
+    """
+        Creates the text file which contains the path to BLAST_DB files
+        you want them to be in the database.
+        exclude is a list with the accession number of the organisms
+        you want them to be excluded from database.
+        db_path is the path where BLAST_DB files are.
+    """
+    
+    catalog_file = db_path + '/dataset_catalog.json'
+    output_file = db_path + '/' + out
+    catalog = pd.read_json(catalog_file)
+    assemblies = catalog['assemblies']
+    out_files = []
+    for assembly in assemblies:
+        if 'accession' in assembly.keys():
+            if assembly['accession'] in exclude:
+                continue
+            else:
+                for _file in assembly['files']:
+                    if _file['fileType'] == 'GENOMIC_NUCLEOTIDE_FASTA':
+                        out_files.append(_file['filePath'])
+                    else:
+                        continue
+        else:
+            continue
+
+    with open(output_file, 'a') as FHIN:
+        FHIN.write('\n'.join(out_files))
+        FHIN.close()
+
+
+
+
+
 def loggin_data(pid, genome, database_file, window_size, step_size, task, identity, qcov, evalue, comment):
     """
         Stores experiment information in a log.
@@ -503,15 +549,15 @@ def print_table(tsv_file):
     tbl = pd.read_table(tsv_file, sep = '\t', header = None)
     print(tbl)
 
-def show_exp_info():
+def show_exp_info(sort_by):
     """
         Prints on screen log/experiments.log file content.
     """
-    
+    sort_by = sort_by.split(',')   
     if os.path.exists('log/'):
         tbl = pd.read_table('log/experiments.log', sep = '\t')
         tbl.isetitem(10, [pd.Timestamp(x) for x in tbl.loc[:, 'DATE']])
-        print(tbl)
+        print(tbl.sort_values(by = sort_by))
     else:
         print('Unable to find log/ folder.')
 
