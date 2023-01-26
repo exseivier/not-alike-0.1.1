@@ -376,7 +376,9 @@ def do_blast(query, db_file, out_blast, evalue, idt, qcov, task):
                     stdout = sup.PIPE, \
                     stderr = sup.PIPE)
 
-    p.communicate()
+    out, err = p.communicate()
+    if err != '':
+        print(err)
     p.kill()
 
 def select_sequences(in_file, hd_file, quite_opposite):
@@ -470,7 +472,7 @@ def make_db(db_path):
                 print(stderr)
                 p.kill()
 
-def make_txtfiledb(db_path, exclude, out):
+def make_txtfiledb(db_path, exclude, include, out):
     """
         Creates the text file which contains the path to BLAST_DB files
         you want them to be in the database.
@@ -484,18 +486,36 @@ def make_txtfiledb(db_path, exclude, out):
     catalog = pd.read_json(catalog_file)
     assemblies = catalog['assemblies']
     out_files = []
-    for assembly in assemblies:
-        if 'accession' in assembly.keys():
-            if assembly['accession'] in exclude:
-                continue
+    if exclude != None:
+        for assembly in assemblies:
+            if 'accession' in assembly.keys():
+                if assembly['accession'] in exclude:
+                    continue
+                else:
+                    for _file in assembly['files']:
+                        if _file['fileType'] == 'GENOMIC_NUCLEOTIDE_FASTA':
+                            out_files.append(_file['filePath'])
+                        else:
+                            continue
             else:
-                for _file in assembly['files']:
-                    if _file['fileType'] == 'GENOMIC_NUCLEOTIDE_FASTA':
-                        out_files.append(_file['filePath'])
-                    else:
-                        continue
-        else:
-            continue
+                continue
+    elif include != None:
+        for assembly in assemblies:
+            if 'accession' in assembly.keys():
+                if assembly['accession'] not in include:
+                    continue
+                else:
+                    for _file in assembly['files']:
+                        if _file['fileType'] == 'GENOMIC_NUCLEOTIDE_FASTA':
+                            out_files.append(_file['filePath'])
+                        else:
+                            continue
+            else:
+                continue
+    else:
+        pass
+
+
 
     with open(output_file, 'a') as FHIN:
         FHIN.write('\n'.join(out_files))
@@ -547,7 +567,9 @@ def print_table(tsv_file):
     """
 
     tbl = pd.read_table(tsv_file, sep = '\t', header = None)
-    print(tbl)
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.precision', 3):
+        print(tbl)
+
 
 def show_exp_info(sort_by):
     """
@@ -557,7 +579,10 @@ def show_exp_info(sort_by):
     if os.path.exists('log/'):
         tbl = pd.read_table('log/experiments.log', sep = '\t')
         tbl.isetitem(10, [pd.Timestamp(x) for x in tbl.loc[:, 'DATE']])
-        print(tbl.sort_values(by = sort_by))
+        tbl = tbl.sort_values(by = sort_by)
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.precision', 3):
+            print(tbl)
+#        print(tbl.sort_values(by = sort_by))
     else:
         print('Unable to find log/ folder.')
 

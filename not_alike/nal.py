@@ -84,12 +84,14 @@ def search(genome, window_size, step_size, database_file, evalue, identity, qcov
 
     CMD.copy_file(out_split, input_split)
 
+    database_file_path = '/'.join(database_file.split('/')[:-1])
+
     db_files = CMD.load_lines(database_file)
 
     for f in db_files:
         dbf = '.'.join(f.split('.')[:-1]) + '.db'
         print('Blasting ' + dbf + ' ...')
-        CMD.do_blast(input_split, 'blast_db/' + dbf, 'blast_out/out.blast', evalue, identity, qcov, task)
+        CMD.do_blast(input_split, database_file_path + '/' + dbf, 'blast_out/out.blast', evalue, identity, qcov, task)
         print('Updating input_split')
         CMD.select_sequences(input_split, 'blast_out/out.blast', quite_opposite)
 
@@ -124,19 +126,34 @@ def db_makeblast(db_path):
                 required = True, \
                 type = str)
 @click.option('-e', '--exclude', \
-                help = 'A list with the accession numbers of the organisms you want to exclude from database text file.', \
-                required = True, \
+                help = 'A list of accession numbers from the organisms you want to exclude from database text file.', \
+                required = False, \
+                default = None, \
+                type = str)
+@click.option('-i', '--include', \
+                required = False, \
+                default = None, \
                 type = str)
 @click.option('-o', '--out', \
                 help = 'Output file name', \
                 required = True, \
                 type = str)
-def db_makefile(db_path, exclude, out):
+def db_makefile(db_path, exclude, include, out):
     """
         Creates the database text file which contains the BLAST_DB files paths.
     """
-    exclude = exclude.split(',')
-    CMD.make_txtfiledb(db_path, exclude, out)
+    if exclude == None and include == None:
+        print('ERROR, Exclude and include options are empty')
+        return 1
+    if exclude != None and include != None:
+        print('ERROR, Only one option between exclude or include is allowed')
+        return 1
+    if exclude != None:
+        exclude = exclude.split(',')
+    if include != None:
+        include = include.split(',')
+    CMD.make_txtfiledb(db_path, exclude, include, out)
+
 
 
 @main.command()
