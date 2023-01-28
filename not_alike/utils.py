@@ -358,7 +358,7 @@ def split_genome(in_file, size, step_size, out_file):
     print(f"Spliting genome {in_file}")
 
 
-def do_blast(query, db_file, out_blast, evalue, idt, qcov, task):
+def do_blast(query, db_file, out_blast, evalue, idt, qcov, task, num_cores):
     """
         Performs a BLASTn task.
     """
@@ -372,7 +372,8 @@ def do_blast(query, db_file, out_blast, evalue, idt, qcov, task):
                     '-perc_identity', str(idt), \
                     '-qcov_hsp_perc', str(qcov), \
                     '-evalue', str(evalue), \
-                    '-max_target_seqs', str(1)], \
+                    '-max_target_seqs', str(1), \
+                    '-num_threads', str(num_cores)], \
                     stdout = sup.PIPE, \
                     stderr = sup.PIPE)
 

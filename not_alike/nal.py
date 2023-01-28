@@ -45,6 +45,11 @@ def main():
                 help = 'BLAST task [blastn | megablast | dc-megablast]', \
                 required = True, \
                 type = str)
+@click.option('-nc', '--num-cores', \
+                help = 'number of cores you want to use. It could be (PC total cores - 1)', \
+                required = False, \
+                default = 1,
+                type = int)
 @click.option('-c', '--comment', \
                 help = 'Leave a comment enclosed by single quotes', \
                 required = False, \
@@ -54,7 +59,7 @@ def main():
                 is_flag = True, \
                 help = 'Performs the opposite task of not-alike.', \
                 type = bool)
-def search(genome, window_size, step_size, database_file, evalue, identity, qcov, task, comment, quite_opposite):
+def search(genome, window_size, step_size, database_file, evalue, identity, qcov, task, comment, quite_opposite, num_cores):
     """
         Searches for not alike fragments in query genome
     """
@@ -91,7 +96,7 @@ def search(genome, window_size, step_size, database_file, evalue, identity, qcov
     for f in db_files:
         dbf = '.'.join(f.split('.')[:-1]) + '.db'
         print('Blasting ' + dbf + ' ...')
-        CMD.do_blast(input_split, database_file_path + '/' + dbf, 'blast_out/out.blast', evalue, identity, qcov, task)
+        CMD.do_blast(input_split, database_file_path + '/' + dbf, 'blast_out/out.blast', evalue, identity, qcov, task, num_cores)
         print('Updating input_split')
         CMD.select_sequences(input_split, 'blast_out/out.blast', quite_opposite)
 
@@ -131,6 +136,7 @@ def db_makeblast(db_path):
                 default = None, \
                 type = str)
 @click.option('-i', '--include', \
+                help = 'A list of accession numbers from the organism you want to include in database text file.', \
                 required = False, \
                 default = None, \
                 type = str)
