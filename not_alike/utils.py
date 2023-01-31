@@ -81,16 +81,27 @@ def __split(seqs, size, step):
     """
     out_seqs = {}
     seq_counter = 0
+    dropped_seqs = 0
     for head, seq in seqs.items():
         lseq = len(seq)
         i = 0
         start = i
         while start < lseq:
             end = start + size - 1
+            num_of_Ns = seq[start:end].count('N') + seq[start:end].count('n')
+            if num_of_Ns / (float(end) - float(start)) > 10 :
+                dropped_seqs += 1
+                start = start + step
+                i += 1
+                seq_counter += 1
+                continue
             out_seqs[">fragment_" + str(seq_counter)] = seq[start:end]
             start = start + step
             i += 1
             seq_counter += 1
+    
+    if dropped_seqs > 0:
+        print(f'{dropped_seqs} sequences were dropped because they contain more than 10% of Ns')
 
     return out_seqs
 
