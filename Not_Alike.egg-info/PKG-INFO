@@ -1,6 +1,6 @@
 Metadata-Version: 1.2
 Name: Not-Alike
-Version: 0.1.1
+Version: 0.2.0
 Summary: Command pipeline that finds not alike regions of query genome compared to at least one genome form a huge list of different genomes.
 Home-page: https://www.github.com/exseivier/not-alike
 Author: Javier Montalvo
