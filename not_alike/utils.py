@@ -242,13 +242,17 @@ def rm_file(path):
 ######      HELPER FUNCTIONS FOR MAPPPING
 
 
-def __ht2idx_ready():
+def __ht2idx_ready(fname_suffix):
     """
         Checks if Hisat2 database is allready formated.
     """
+    
+    # TO SOLVE. Checks whatever file ending with .1.ht2 and return true.
+    # It has, also, to check if reference genome suffix / prefix is
+    # present in hisat2 index folder.
 
-    for fname in os.listdir('ht2_idx'):
-        if fname.endswith('.1.ht2'):
+    for fname in sorted(os.listdir('ht2_idx')):
+        if fname.startswith(fname_suffix) and fname.endswith('.8.ht2'):
             return True
         
     return False
@@ -414,7 +418,7 @@ def mapping(ref_genome, input_split):
     fname_suffix = ref_genome.split('/')[-1]
     fname_suffix = '.'.join(fname_suffix.split('.')[:-1])
 
-    if not __ht2idx_ready():
+    if not __ht2idx_ready(fname_suffix):
         print('ht2 index not found.')
         print('Indexing.')
         __index(ref_genome, fname_suffix)
