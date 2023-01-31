@@ -1,0 +1,6 @@
+#### Cganges ####
+
+split proces.
+	changes at split function. It is better to use biopython.
+	Implement a function that drops out all those sequences that contain 10% of Ns.
+
