@@ -238,6 +238,7 @@ def rm_file(path):
     else:
         print(path + ' not found.')
 
+###################################################################
 
 ######      HELPER FUNCTIONS FOR MAPPPING
 
@@ -250,6 +251,8 @@ def __ht2idx_ready(fname_suffix):
     # TO SOLVE. Checks whatever file ending with .1.ht2 and return true.
     # It has, also, to check if reference genome suffix / prefix is
     # present in hisat2 index folder.
+
+    # It works perfect !
 
     for fname in sorted(os.listdir('ht2_idx')):
         if fname.startswith(fname_suffix) and fname.endswith('.8.ht2'):
@@ -326,7 +329,6 @@ def __do_assembly(pid):
     p.communicate()
     p.kill()
 
-
 ##########################################################
 
 
@@ -350,6 +352,46 @@ def __extract_sequences(genome, pid):
     p.communicate()
     p.kill()
 
+######################################################
+
+######      DO ASSEMBLY STATS HELPER FUNCTIONS
+
+def mean(data):
+    '''
+        Calculates the mean of data population
+    '''
+    return sum(data) / len(data)
+
+def median(data):
+    '''
+        Calculates the median of a population of data
+    '''
+
+    data = sorted(data)
+    len_data = len(data)
+    pivot = len_data/2
+    if pivot.is_integer():
+        return (data[pivot] + data[pivot + 1]) / 2
+    else:
+        return data[int(pivot) + 1]
+
+def nl50(data):
+    '''
+        Calculates L50 and N50
+    '''
+
+    total = sum(data)
+    pivot = round(total/2)
+    nt_count = 0
+    contig_count = 0
+    for num_of_nt in data:
+        nt_count += num_of_nt
+        if nt_count >= pivot:
+            return (nt_count, contig_count)
+
+        contig_count += 1
+
+#######################################################
 
 
 ######################################
@@ -443,6 +485,34 @@ def extseq(genome, PID):
         Extracts sequences from genome using gff or gtf input file.
     """
     __extract_sequences(genome, PID)
+
+def do_assembly_stats(fasta_file, PID = 0):
+    '''
+        Calculates assembly statistics such as:
+        N50, L50, MinLen, MaxLen, Median, Mean, StdErr, etc...
+    '''
+    
+    seqs = __load_seqs(fasta_file)
+    lengths = sorted([len(seq) for seq in seqs.values])
+    del(seqs)
+    st_mean = mean(lengths)
+    st_minlen = min(lengths)
+    st_maxlen = max(lengths)
+    st_median = median(lengths)
+    st_N50, st_L50 = nl50(lengths)
+
+    lengths = ':'.join(lengths)
+    with open('log/stats.log', 'a') as FH:
+        FH.write(str(PID) + '\t' \
+                + fasta_file + '\t' \
+                + str(st_mean) + '\t' \
+                + str(st_minlen) + '\t' \
+                + str(st_maxlen) + '\t' \
+                + str(st_median) + '\t' \
+                + str(st_N50) + '\t' \
+                + str(st_L50) + '\t' \
+                + lengths + '\n')
+        FH.close()
 
 def dataformat_tsv(assembly_report, assembly_report_tsv):
     """

@@ -12,6 +12,10 @@ def main():
     """
     pass
 
+######################################
+######          SEARCH          ######
+######################################
+
 @main.command()
 @click.option('-g', '--genome', \
                 help = 'Query genome FASTA file name', \
@@ -111,7 +115,14 @@ def search(genome, window_size, step_size, database_file, evalue, identity, qcov
     print('Extracting sequences.')
     CMD.extseq(genome, PID)
 
+    print('Doing assembly stats')
+    CMD.do_assembly_stats('gtfs/nal_frags.' + str(PID) + '.fasta', PID)
+
     print('not-alike has finished.')
+
+##############################################
+######          DB MAKEBLAST            ######
+##############################################
 
 @main.command()
 @click.option('-db', '--db-path', \
@@ -125,6 +136,10 @@ def db_makeblast(db_path):
 
     CMD.make_db(db_path)
     
+##########################################
+######          DB MAKEFILE         ######
+##########################################
+
 @main.command()
 @click.option('-db', '--db-path', \
                 help = 'Path to FASTA files database', \
@@ -160,7 +175,9 @@ def db_makefile(db_path, exclude, include, out):
         include = include.split(',')
     CMD.make_txtfiledb(db_path, exclude, include, out)
 
-
+######################################
+######          SHOW DB         ######
+######################################
 
 @main.command()
 @click.option('-p', '--db-path', \
@@ -180,7 +197,11 @@ def show_db(db_path):
     print(assembly_report_tsv)
 
     CMD.print_table(assembly_report_tsv)
-        
+
+##########################################
+######          SHOW EXP            ######
+##########################################
+
 @main.command()
 @click.option('--sort-by', \
                 help = 'Criteria to sort values.', \
@@ -192,6 +213,26 @@ def show_exp(sort_by):
         Shows information about epxeriments stored in the current working directory
     """
     CMD.show_exp_info(sort_by)
+
+##########################################
+######          ASSM STATS          ######
+##########################################
+
+@main.command()
+@click.option('-f', '--file-name', \
+                help = 'FASTA file name', \
+                required = True, \
+                type = str)
+@click.option('-pid', \
+                help = 'Process ID', \
+                required = False, \
+                default = 00, \
+                type = int)
+def assm_stats(file_name, pid):
+    """
+        Calculates assembly statistics such as: Mean, Median, N50 and L50.
+    """
+    do_assembly_stats(file_name, pid)
 
 
 if __name__ == '__main__':
