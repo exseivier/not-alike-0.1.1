@@ -232,7 +232,7 @@ def assm_stats(file_name, pid):
     """
         Calculates assembly statistics such as: Mean, Median, N50 and L50.
     """
-    do_assembly_stats(file_name, pid)
+    CMD.do_assembly_stats(file_name, pid)
 
 
 if __name__ == '__main__':

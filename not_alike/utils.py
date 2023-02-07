@@ -371,9 +371,11 @@ def median(data):
     len_data = len(data)
     pivot = len_data/2
     if pivot.is_integer():
+        pivot = int(pivot)
         return (data[pivot] + data[pivot + 1]) / 2
     else:
-        return data[int(pivot) + 1]
+        pivot = int(pivot)
+        return data[pivot + 1]
 
 def nl50(data):
     '''
@@ -387,7 +389,7 @@ def nl50(data):
     for num_of_nt in data:
         nt_count += num_of_nt
         if nt_count >= pivot:
-            return (nt_count, contig_count)
+            return (num_of_nt, contig_count)
 
         contig_count += 1
 
@@ -493,18 +495,20 @@ def do_assembly_stats(fasta_file, PID = 0):
     '''
     
     seqs = __load_seqs(fasta_file)
-    lengths = sorted([len(seq) for seq in seqs.values])
+    lengths = sorted([len(seq) for seq in seqs.values()])
     del(seqs)
+    st_total = len(lengths)
     st_mean = mean(lengths)
     st_minlen = min(lengths)
     st_maxlen = max(lengths)
     st_median = median(lengths)
     st_N50, st_L50 = nl50(lengths)
-
+    lengths = [str(x) for x in lengths]
     lengths = ':'.join(lengths)
     with open('log/stats.log', 'a') as FH:
         FH.write(str(PID) + '\t' \
                 + fasta_file + '\t' \
+                + str(st_total) + '\t' \
                 + str(st_mean) + '\t' \
                 + str(st_minlen) + '\t' \
                 + str(st_maxlen) + '\t' \
