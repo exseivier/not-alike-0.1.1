@@ -81,16 +81,27 @@ def __split(seqs, size, step):
     """
     out_seqs = {}
     seq_counter = 0
+    dropped_seqs = 0
     for head, seq in seqs.items():
         lseq = len(seq)
         i = 0
         start = i
         while start < lseq:
             end = start + size - 1
+            num_of_Ns = seq[start:end].count('N') + seq[start:end].count('n')
+            if num_of_Ns / (float(end) - float(start)) > 10 :
+                dropped_seqs += 1
+                start = start + step
+                i += 1
+                seq_counter += 1
+                continue
             out_seqs[">fragment_" + str(seq_counter)] = seq[start:end]
             start = start + step
             i += 1
             seq_counter += 1
+    
+    if dropped_seqs > 0:
+        print(f'{dropped_seqs} sequences were dropped because they contain more than 10% of Ns')
 
     return out_seqs
 
@@ -227,17 +238,24 @@ def rm_file(path):
     else:
         print(path + ' not found.')
 
+###################################################################
 
 ######      HELPER FUNCTIONS FOR MAPPPING
 
 
-def __ht2idx_ready():
+def __ht2idx_ready(fname_suffix):
     """
         Checks if Hisat2 database is allready formated.
     """
+    
+    # TO SOLVE. Checks whatever file ending with .1.ht2 and return true.
+    # It has, also, to check if reference genome suffix / prefix is
+    # present in hisat2 index folder.
 
-    for fname in os.listdir('ht2_idx'):
-        if fname.endswith('.1.ht2'):
+    # It works perfect !
+
+    for fname in sorted(os.listdir('ht2_idx')):
+        if fname.startswith(fname_suffix) and fname.endswith('.8.ht2'):
             return True
         
     return False
@@ -311,7 +329,6 @@ def __do_assembly(pid):
     p.communicate()
     p.kill()
 
-
 ##########################################################
 
 
@@ -335,6 +352,46 @@ def __extract_sequences(genome, pid):
     p.communicate()
     p.kill()
 
+######################################################
+
+######      DO ASSEMBLY STATS HELPER FUNCTIONS
+
+def mean(data):
+    '''
+        Calculates the mean of data population
+    '''
+    return sum(data) / len(data)
+
+def median(data):
+    '''
+        Calculates the median of a population of data
+    '''
+
+    data = sorted(data)
+    len_data = len(data)
+    pivot = len_data/2
+    if pivot.is_integer():
+        return (data[pivot] + data[pivot + 1]) / 2
+    else:
+        return data[int(pivot) + 1]
+
+def nl50(data):
+    '''
+        Calculates L50 and N50
+    '''
+
+    total = sum(data)
+    pivot = round(total/2)
+    nt_count = 0
+    contig_count = 0
+    for num_of_nt in data:
+        nt_count += num_of_nt
+        if nt_count >= pivot:
+            return (nt_count, contig_count)
+
+        contig_count += 1
+
+#######################################################
 
 
 ######################################
@@ -358,7 +415,7 @@ def split_genome(in_file, size, step_size, out_file):
     print(f"Spliting genome {in_file}")
 
 
-def do_blast(query, db_file, out_blast, evalue, idt, qcov, task):
+def do_blast(query, db_file, out_blast, evalue, idt, qcov, task, num_cores):
     """
         Performs a BLASTn task.
     """
@@ -372,7 +429,8 @@ def do_blast(query, db_file, out_blast, evalue, idt, qcov, task):
                     '-perc_identity', str(idt), \
                     '-qcov_hsp_perc', str(qcov), \
                     '-evalue', str(evalue), \
-                    '-max_target_seqs', str(1)], \
+                    '-max_target_seqs', str(1), \
+                    '-num_threads', str(num_cores)], \
                     stdout = sup.PIPE, \
                     stderr = sup.PIPE)
 
@@ -402,7 +460,7 @@ def mapping(ref_genome, input_split):
     fname_suffix = ref_genome.split('/')[-1]
     fname_suffix = '.'.join(fname_suffix.split('.')[:-1])
 
-    if not __ht2idx_ready():
+    if not __ht2idx_ready(fname_suffix):
         print('ht2 index not found.')
         print('Indexing.')
         __index(ref_genome, fname_suffix)
@@ -427,6 +485,34 @@ def extseq(genome, PID):
         Extracts sequences from genome using gff or gtf input file.
     """
     __extract_sequences(genome, PID)
+
+def do_assembly_stats(fasta_file, PID = 0):
+    '''
+        Calculates assembly statistics such as:
+        N50, L50, MinLen, MaxLen, Median, Mean, StdErr, etc...
+    '''
+    
+    seqs = __load_seqs(fasta_file)
+    lengths = sorted([len(seq) for seq in seqs.values])
+    del(seqs)
+    st_mean = mean(lengths)
+    st_minlen = min(lengths)
+    st_maxlen = max(lengths)
+    st_median = median(lengths)
+    st_N50, st_L50 = nl50(lengths)
+
+    lengths = ':'.join(lengths)
+    with open('log/stats.log', 'a') as FH:
+        FH.write(str(PID) + '\t' \
+                + fasta_file + '\t' \
+                + str(st_mean) + '\t' \
+                + str(st_minlen) + '\t' \
+                + str(st_maxlen) + '\t' \
+                + str(st_median) + '\t' \
+                + str(st_N50) + '\t' \
+                + str(st_L50) + '\t' \
+                + lengths + '\n')
+        FH.close()
 
 def dataformat_tsv(assembly_report, assembly_report_tsv):
     """

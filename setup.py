@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='Not-Alike',
-    version='0.1.1',
+    version='0.2.0',
     author='Javier Montalvo',
     author_email='buitrejma@gmail.com',
     py_modules=['not_alike.nal', 'not_alike.utils'],
