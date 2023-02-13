@@ -234,6 +234,40 @@ def assm_stats(file_name, pid):
     """
     CMD.do_assembly_stats(file_name, pid)
 
+##############################################
+######          PRIMER SELECT           ######
+##############################################
+
+@main.command()
+@click.option('--input-file', \
+                help = 'Input fasta file', \
+                required = True, \
+                type = str)
+@click.option('--opt-size', \
+                help = 'Optimum primer size (nt)', \
+                required = True, \
+                type = int)
+@click.option('--opt-gc', \
+                help = 'Optimum GC percentage (%)', \
+                required = True, \
+                type = float)
+@click.option('--opt-tm', \
+                help = 'Optimum melting point (°C)', \
+                required = True, \
+                type = float)
+@click.option('--product-size', \
+                help = 'Expected product zise (bp) [i.e. 75-100]', \
+                required = True, \
+                type = str)
+@click.option('--template-size-range', \
+                help = 'Template sequence size range (bp) [i.e. 750-1000]', \
+                required = True, \
+                type = str)
+def search_primers(input_file, opt_size, opt_gc, opt_tm, product_size, template_size_range):
+    '''
+        Selects the best fitted primer sequences based on input arguments.
+    '''
+    CMD.find_primers(input_file, opt_size, opt_gc, opt_tm, product_size, template_size_range)
 
 if __name__ == '__main__':
     main()

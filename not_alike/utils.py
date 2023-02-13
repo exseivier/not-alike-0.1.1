@@ -394,6 +394,39 @@ def nl50(data):
         contig_count += 1
 
 #######################################################
+#
+#           FIND PRIMERS HELPER FUNCTIONS
+
+def __select_seqs_by_size(seqs, size_range):
+    size_range = [int(size) for size in size_range.split('-')]
+    seqsf = {}
+    for head, seq in seqs.items():
+        if len(seq) >= size_range[0] \
+        and len(seq) <= size_range[1]:
+            seqsf[head] = seq
+
+    return seqsf
+
+def __create_input_primer(seqs, options, input_file):
+    '''
+        Creates the primer3 core input file with fasta sequences using the
+        options choosen by the user.
+    '''
+    input_primer3_file = '.'.join(input_file.split('.')[:-1]) + '.inp3'
+    with open(input_primer3_file, 'w+') as FH:
+        for head, seq in seqs.items():
+            options['SEQUENCE_ID'] = head[1:]
+            options['SEQUENCE_TEMPLATE'] = seq
+            for key, value in options.items():
+                FH.write(key + '=' + value + '\n')
+
+            FH.write('=\n')
+
+        FH.close()
+
+    return input_primer3_file
+
+
 
 
 ######################################
@@ -676,3 +709,33 @@ def show_exp_info(sort_by):
     else:
         print('Unable to find log/ folder.')
 
+
+def find_primers(input_file, opt_size, opt_gc, opt_tm, product_size, template_size_range):
+    '''
+        Finds the best fitted primers.
+    '''
+    
+    print('Loading sequences')
+    seqs = __load_seqs(input_file)
+    print('Filtering by size')
+    seqs = __select_seqs_by_size(seqs, template_size_range)
+    print(str(len(seqs)) + ' were selected')
+    print('Preparing primer3_core input file')
+    options = {
+            'SEQUENCE_ID': '',
+            'SEQUENCE_TEMPLATE': '',
+            'PRIMER_TASK': 'generic',
+            'PRIMER_PICK_LEFT_PRIMER': '1',
+            'PRIMER_PICK_INTERNAL_OLIGO': '0',
+            'PRIMER_PICK_RIGHT_PRIMER': '1',
+            'PRIMER_OPT_SIZE': str(opt_size),
+            'PRIMER_OPT_GC_PERCENT': str(opt_gc),
+            'PRIMER_OPT_TM': str(opt_tm),
+            'PRIMER_PRODUCT_SIZE_RANGE': product_size,
+            'PRIMER_MAX_NS_ACCEPTED': '0',
+            'PRIMER_GC_CLAMP': '2'
+            }
+    inputFileName = __create_input_primer(seqs, options, input_file)
+    print('Primer3 input file done')
+
+    
