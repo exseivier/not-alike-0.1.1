@@ -12,6 +12,10 @@ def main():
     """
     pass
 
+######################################
+######          SEARCH          ######
+######################################
+
 @main.command()
 @click.option('-g', '--genome', \
                 help = 'Query genome FASTA file name', \
@@ -45,6 +49,11 @@ def main():
                 help = 'BLAST task [blastn | megablast | dc-megablast]', \
                 required = True, \
                 type = str)
+@click.option('-nc', '--num-cores', \
+                help = 'number of cores you want to use. It could be (PC total cores - 1)', \
+                required = False, \
+                default = 1,
+                type = int)
 @click.option('-c', '--comment', \
                 help = 'Leave a comment enclosed by single quotes', \
                 required = False, \
@@ -54,7 +63,7 @@ def main():
                 is_flag = True, \
                 help = 'Performs the opposite task of not-alike.', \
                 type = bool)
-def search(genome, window_size, step_size, database_file, evalue, identity, qcov, task, comment, quite_opposite):
+def search(genome, window_size, step_size, database_file, evalue, identity, qcov, task, comment, quite_opposite, num_cores):
     """
         Searches for not alike fragments in query genome
     """
@@ -91,7 +100,7 @@ def search(genome, window_size, step_size, database_file, evalue, identity, qcov
     for f in db_files:
         dbf = '.'.join(f.split('.')[:-1]) + '.db'
         print('Blasting ' + dbf + ' ...')
-        CMD.do_blast(input_split, database_file_path + '/' + dbf, 'blast_out/out.blast', evalue, identity, qcov, task)
+        CMD.do_blast(input_split, database_file_path + '/' + dbf, 'blast_out/out.blast', evalue, identity, qcov, task, num_cores)
         print('Updating input_split')
         CMD.select_sequences(input_split, 'blast_out/out.blast', quite_opposite)
 
@@ -106,7 +115,14 @@ def search(genome, window_size, step_size, database_file, evalue, identity, qcov
     print('Extracting sequences.')
     CMD.extseq(genome, PID)
 
+    print('Doing assembly stats')
+    CMD.do_assembly_stats('gtfs/nal_frags.' + str(PID) + '.fasta', PID)
+
     print('not-alike has finished.')
+
+##############################################
+######          DB MAKEBLAST            ######
+##############################################
 
 @main.command()
 @click.option('-db', '--db-path', \
@@ -120,6 +136,10 @@ def db_makeblast(db_path):
 
     CMD.make_db(db_path)
     
+##########################################
+######          DB MAKEFILE         ######
+##########################################
+
 @main.command()
 @click.option('-db', '--db-path', \
                 help = 'Path to FASTA files database', \
@@ -131,6 +151,7 @@ def db_makeblast(db_path):
                 default = None, \
                 type = str)
 @click.option('-i', '--include', \
+                help = 'A list of accession numbers from the organism you want to include in database text file.', \
                 required = False, \
                 default = None, \
                 type = str)
@@ -154,7 +175,9 @@ def db_makefile(db_path, exclude, include, out):
         include = include.split(',')
     CMD.make_txtfiledb(db_path, exclude, include, out)
 
-
+######################################
+######          SHOW DB         ######
+######################################
 
 @main.command()
 @click.option('-p', '--db-path', \
@@ -174,7 +197,11 @@ def show_db(db_path):
     print(assembly_report_tsv)
 
     CMD.print_table(assembly_report_tsv)
-        
+
+##########################################
+######          SHOW EXP            ######
+##########################################
+
 @main.command()
 @click.option('--sort-by', \
                 help = 'Criteria to sort values.', \
@@ -187,6 +214,60 @@ def show_exp(sort_by):
     """
     CMD.show_exp_info(sort_by)
 
+##########################################
+######          ASSM STATS          ######
+##########################################
+
+@main.command()
+@click.option('-f', '--file-name', \
+                help = 'FASTA file name', \
+                required = True, \
+                type = str)
+@click.option('-pid', \
+                help = 'Process ID', \
+                required = False, \
+                default = 00, \
+                type = int)
+def assm_stats(file_name, pid):
+    """
+        Calculates assembly statistics such as: Mean, Median, N50 and L50.
+    """
+    CMD.do_assembly_stats(file_name, pid)
+
+##############################################
+######          PRIMER SELECT           ######
+##############################################
+
+@main.command()
+@click.option('--input-file', \
+                help = 'Input fasta file', \
+                required = True, \
+                type = str)
+@click.option('--opt-size', \
+                help = 'Optimum primer size (nt)', \
+                required = True, \
+                type = int)
+@click.option('--opt-gc', \
+                help = 'Optimum GC percentage (%)', \
+                required = True, \
+                type = float)
+@click.option('--opt-tm', \
+                help = 'Optimum melting point (°C)', \
+                required = True, \
+                type = float)
+@click.option('--product-size', \
+                help = 'Expected product zise (bp) [i.e. 75-100]', \
+                required = True, \
+                type = str)
+@click.option('--template-size-range', \
+                help = 'Template sequence size range (bp) [i.e. 750-1000]', \
+                required = True, \
+                type = str)
+def search_primers(input_file, opt_size, opt_gc, opt_tm, product_size, template_size_range):
+    '''
+        Selects the best fitted primer sequences based on input arguments.
+    '''
+    CMD.find_primers(input_file, opt_size, opt_gc, opt_tm, product_size, template_size_range)
 
 if __name__ == '__main__':
     main()
