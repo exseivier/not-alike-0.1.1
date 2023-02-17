@@ -717,8 +717,10 @@ def find_primers(input_file, opt_size, opt_gc, opt_tm, product_size, template_si
     
     print('Loading sequences')
     seqs = __load_seqs(input_file)
+
     print('Filtering by size')
     seqs = __select_seqs_by_size(seqs, template_size_range)
+    
     print(str(len(seqs)) + ' were selected')
     print('Preparing primer3_core input file')
     options = {
@@ -735,7 +737,29 @@ def find_primers(input_file, opt_size, opt_gc, opt_tm, product_size, template_si
             'PRIMER_MAX_NS_ACCEPTED': '0',
             'PRIMER_GC_CLAMP': '2'
             }
+    
     inputFileName = __create_input_primer(seqs, options, input_file)
+    
     print('Primer3 input file done')
+    
+    outputFileName = '.'.join(inputFileName.split('.')[:-1]) + '.outp3'
+    
+    with open(outputFileName, 'w+') as FH:
+    
+        p = sup.Popen(['primer3_core', '<', inputFileName], \
+                    stdout = FH, \
+                    stderr = sup.PIPE)
+        
+        err = p.communicate()
+        
+        if err != '':
+            print(err)
+        
+        p.kill()
+        
+        FH.close()
+
+
+
 
     
