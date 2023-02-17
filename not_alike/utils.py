@@ -744,20 +744,23 @@ def find_primers(input_file, opt_size, opt_gc, opt_tm, product_size, template_si
     
     outputFileName = '.'.join(inputFileName.split('.')[:-1]) + '.outp3'
     
-    with open(outputFileName, 'w+') as FH:
-    
-        p = sup.Popen(['primer3_core', '<', inputFileName], \
-                    stdout = FH, \
+    FHOUT =  open(outputFileName, 'w+')
+    FHIN = open(inputFileName, 'r')
+       
+    p = sup.Popen(['primer3_core'], \
+                    stdin = FHIN, \
+                    stdout = FHOUT, \
                     stderr = sup.PIPE)
         
-        err = p.communicate()
+    err = p.communicate()
         
-        if err != '':
-            print(err)
-        
-        p.kill()
-        
-        FH.close()
+    if err != '':
+        print(err)
+    
+    p.kill()
+    
+    FHOUT.close()
+    FHIN.close()
 
 
 
