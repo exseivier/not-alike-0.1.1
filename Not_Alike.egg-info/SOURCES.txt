@@ -1,3 +1,4 @@
+LICENSE
 README.md
 setup.py
 Not_Alike.egg-info/PKG-INFO
