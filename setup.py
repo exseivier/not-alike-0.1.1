@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='Not-Alike',
-    version='0.1.1',
+    version='2.0.0',
     author='Javier Montalvo',
     author_email='buitrejma@gmail.com',
     py_modules=['not_alike.nal', 'not_alike.utils'],
@@ -14,7 +14,7 @@ setup(
     python_requires='>=3.9',
     description='Command pipeline that finds not alike regions of query genome compared to at least one genome form a huge list of different genomes.',
     long_description = open('README.md', 'r').read(),
-    install_requires =['click', 'pandas'],
+    install_requires =['click', 'pandas', 'biopython'],
     license = 'GNU General Public License v3 or later (GPLv3+)',
     url='https://www.github.com/exseivier/not-alike',
     entry_points = {
