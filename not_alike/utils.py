@@ -627,7 +627,7 @@ def make_txtfiledb(query_genome, db_path, exclude, include, out):
         pass
 
 
-    
+    check_path_exists('blast_out')
     seqs = __load_seqs(query_genome)
     seqs = __split(seqs, 1000, 2000)
     seqs = __sample(seqs, 10)
@@ -635,8 +635,10 @@ def make_txtfiledb(query_genome, db_path, exclude, include, out):
     __write_seqs(seqs, sample_fasta)
     scores = []
     for f in out_files:
-        p = sup.Popen(['blast', \
-                        '-query', sample_seqs, \
+        f = '.'.join(f.split('.')[:-1]) + '.db'
+        print(f'Blasting {f}...')
+        p = sup.Popen(['blastn', \
+                        '-query', sample_fasta, \
                         '-db', db_path + '/' + f, \
                         '-out', 'blast_out/tmp.blast', \
                         '-outfmt', '6 qseqid', \
@@ -650,18 +652,21 @@ def make_txtfiledb(query_genome, db_path, exclude, include, out):
         out, err = p.communicate()
         if err != '':
             print(err)
-            p.kill()
-            break
 
         p.kill()
         lines = load_lines('blast_out/tmp.blast')
         lines = set(sorted(lines))
         len_lines = len(lines)
         scores.append(len_lines)
+        print(f'Blast output for {f} gets {len_lines} hits')
 
-    df = pd.DataFrame({'files' : out_files, 'score' : scores})
-    df = df.sort_values(by = 'score', ascending = False)
-    out_files = df.files.tolist()
+    if len(out_files) != len(scores):
+        print('Error at make_txtfiledb function')
+        print('outfiles and scores length are different.')
+    else:
+        df = pd.DataFrame({'files' : out_files, 'score' : scores})
+        df = df.sort_values(by = 'score', ascending = False)
+        out_files = df.files.tolist()
 
     with open(output_file, 'a') as FHIN:
         FHIN.write('\n'.join(out_files))

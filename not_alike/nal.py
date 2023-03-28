@@ -141,6 +141,10 @@ def db_makeblast(db_path):
 ##########################################
 
 @main.command()
+@click.option('-qg', '--query-genome', \
+                help = 'Path to query genome (FASTA)', \
+                required = True, \
+                type = str)
 @click.option('-db', '--db-path', \
                 help = 'Path to FASTA files database', \
                 required = True, \
@@ -159,7 +163,7 @@ def db_makeblast(db_path):
                 help = 'Output file name', \
                 required = True, \
                 type = str)
-def db_makefile(db_path, exclude, include, out):
+def db_makefile(query_genome, db_path, exclude, include, out):
     """
         Creates the database text file which contains the BLAST_DB files paths.
     """
@@ -173,7 +177,7 @@ def db_makefile(db_path, exclude, include, out):
         exclude = exclude.split(',')
     if include != None:
         include = include.split(',')
-    CMD.make_txtfiledb(db_path, exclude, include, out)
+    CMD.make_txtfiledb(query_genome, db_path, exclude, include, out)
 
 ######################################
 ######          SHOW DB         ######
