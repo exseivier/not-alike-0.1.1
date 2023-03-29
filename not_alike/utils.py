@@ -96,9 +96,10 @@ def __write_seqs(seqs, outfile):
     """
 
     """
-
     with open(outfile, 'w+') as FHOUT:
         SeqIO.write(seqs, FHOUT, 'fasta')
+    
+
         
 
 ##################################################
@@ -130,7 +131,7 @@ def __select_seqs(seqs, heads, quite_opposite):
     else:
         print(str(lhd) + ' dropped secuences')
     if lhd <= 0:
-        return seqs
+        return list(seqs.values())
     list_seqs_keys = [x for x in seqs.keys()]
 #    list_seqs_keys = [x.id for x in seqs]
     list_seqs_keys = list(set(list_seqs_keys))
@@ -516,7 +517,7 @@ def do_assembly_stats(fasta_file, PID = 0):
     '''
     
     seqs = __load_seqs(fasta_file)
-    lengths = sorted([len(seq) for seq in seqs.values()])
+    lengths = sorted([len(seq.seq) for seq in seqs])
     del(seqs)
     st_total = len(lengths)
     st_mean = mean(lengths)
