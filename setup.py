@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/env python3
 
 from setuptools import setup
 
@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='Not-Alike',
-    version='2.0.0',
+    version='2.1.0',
     author='Javier Montalvo',
     author_email='buitrejma@gmail.com',
     py_modules=['not_alike.nal', 'not_alike.utils'],
